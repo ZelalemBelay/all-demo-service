@@ -1,0 +1,8 @@
+spring:
+  cloud:
+    azure:
+      cosmos:
+        endpoint: ${AZURE_COSMOS_SQL_ENDPOINT}
+        key: ${AZURE_COSMOS_SQL_KEY}
+        database: ${AZURE_COSMOS_SQL_DATABASE}
+        populate-query-metrics: true
