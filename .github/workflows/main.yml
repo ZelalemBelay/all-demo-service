@@ -1,0 +1,42 @@
+name: Build and Deploy Spring Boot App to Remote Debian Docker Host
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    - name: Set up Java
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'temurin'
+        java-version: '17'  # Change based on your project's Java version
+
+    - name: Build with Maven
+      run: mvn clean package -DskipTests
+
+    - name: Set up SSH
+      uses: webfactory/ssh-agent@v0.7.0
+      with:
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+    - name: Copy JAR to Remote Host
+      run: |
+        scp -o StrictHostKeyChecking=no target/*.jar ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }}:/home/${{ secrets.REMOTE_USER }}/app.jar
+
+    - name: Deploy on Remote Host
+      run: |
+        ssh -o StrictHostKeyChecking=no ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} << 'EOF'
+          docker stop myapp || true
+          docker rm myapp || true
+          docker rmi myapp:latest || true
+          echo "FROM openjdk:17-jdk-slim\nCOPY app.jar app.jar\nENTRYPOINT [\"java\", \"-jar\", \"/app.jar\"]" > Dockerfile
+          docker build -t myapp:latest .
+          docker run -d -p 8080:8080 --name myapp myapp:latest
+        EOF
