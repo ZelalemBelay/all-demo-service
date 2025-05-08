@@ -1,45 +1,33 @@
-name: Deploy to Remote Docker Host
+name: Deploy Spring Boot JAR to Debian Docker Host
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
+    - name: Checkout repo
       uses: actions/checkout@v3
 
-    - name: Set up JDK
-      uses: actions/setup-java@v3
+    - name: Set up SSH
+      uses: webfactory/ssh-agent@v0.7.0
       with:
-        distribution: 'temurin'
-        java-version: '17'
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-    - name: Build the JAR
-      run: ./mvnw clean package -DskipTests
-
-    - name: Copy files to remote server
-      uses: appleboy/scp-action@v0.1.4
-      with:
-        host: ${{ secrets.REMOTE_HOST }}
-        username: ${{ secrets.REMOTE_USER }}
-        key: ${{ secrets.REMOTE_SSH_KEY }}
-        source: "target/*.jar"
-        target: "/home/${{ secrets.REMOTE_USER }}/app"
+    - name: Copy JAR to remote host
+      run: |
+        scp -o StrictHostKeyChecking=no target/your-app.jar ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }}:/home/${{ secrets.REMOTE_USER }}/your-app.jar
 
     - name: Deploy via SSH
-      uses: appleboy/ssh-action@v1.0.0
-      with:
-        host: ${{ secrets.REMOTE_HOST }}
-        username: ${{ secrets.REMOTE_USER }}
-        key: ${{ secrets.REMOTE_SSH_KEY }}
-        script: |
-          cd /home/${{ secrets.REMOTE_USER }}/app
-          docker stop springapp || true
-          docker rm springapp || true
-          docker build -t springapp .
-          docker run -d --name springapp -p 8080:8080 springapp
+      run: |
+        ssh -o StrictHostKeyChecking=no ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} << 'EOF'
+          docker stop myapp || true
+          docker rm myapp || true
+          docker rmi myapp:latest || true
+          cd /home/${{ secrets.REMOTE_USER }}
+          docker build -t myapp:latest .
+          docker run -d -p 8080:8080 --name myapp myapp:latest
+        EOF
