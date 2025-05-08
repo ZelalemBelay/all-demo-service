@@ -1,8 +1,27 @@
 spring:
-  cloud:
-    azure:
-      cosmos:
-        endpoint: ${AZURE_COSMOS_SQL_ENDPOINT}
-        key: ${AZURE_COSMOS_SQL_KEY}
-        database: ${AZURE_COSMOS_SQL_DATABASE}
-        populate-query-metrics: true
+#  cloud:
+#    azure:
+#      cosmos:
+#        endpoint: ${AZURE_COSMOS_SQL_ENDPOINT}
+#        key: ${AZURE_COSMOS_SQL_KEY}
+#        database: ${AZURE_COSMOS_SQL_DATABASE}
+#        populate-query-metrics: false
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: YOUR_CLIENT_ID
+            client-secret: YOUR_CLIENT_SECRET
+            scope: profile, email
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            authorization-grant-type: authorization_code
+            client-name: Google
+        provider:
+          google:
+            authorization-uri: https://accounts.google.com/o/oauth2/auth
+            token-uri: https://oauth2.googleapis.com/token
+            user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
+            user-name-attribute: sub
+server:
+  port: 8080

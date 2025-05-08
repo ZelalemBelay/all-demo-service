@@ -13,8 +13,9 @@ import org.springframework.data.annotation.Id;
 public class Worker {
 
     @Id
-    private String workerId;
     @PartitionKey
+    private String workerId;
+
     private String name;
     private int age;
     private String gender;
