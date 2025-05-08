@@ -40,11 +40,16 @@ jobs:
         echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
         chmod 600 ~/.ssh/id_rsa
 
-        ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa $REMOTE_USER@$REMOTE_HOST << 'EOF'
+    - name: Deploy on Remote Host
+      run: |
+        ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} << 'EOF'
           docker stop myapp || true
           docker rm myapp || true
           docker rmi myapp:latest || true
-          echo "FROM openjdk:17-jdk-slim\nCOPY app.jar app.jar\nENTRYPOINT [\"java\", \"-jar\", \"/app.jar\"]" > Dockerfile
+          cat <<DOCKER > Dockerfile
+          FROM openjdk:17-jdk-slim
+          COPY app.jar app.jar
+          ENTRYPOINT ["java", "-jar", "/app.jar"]
           docker build -t myapp:latest .
           docker run -d -p 8080:8080 --name myapp myapp:latest
         EOF
