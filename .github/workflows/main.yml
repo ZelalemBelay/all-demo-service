@@ -19,7 +19,9 @@ jobs:
         java-version: '17'  # Change based on your project's Java version
 
     - name: Build with Maven
-      run: mvn clean package -DskipTests
+      run: |
+          cd adey-security
+          mvn clean package -DskipTests
 
     - name: Set up SSH
       uses: webfactory/ssh-agent@v0.7.0
