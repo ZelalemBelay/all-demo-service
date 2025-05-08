@@ -1,6 +1,7 @@
 name: Build and Deploy Spring Boot App to Remote Debian Docker Host
 
 on:
+  workflow_dispatch:
   push:
     branches: [ main ]
 
