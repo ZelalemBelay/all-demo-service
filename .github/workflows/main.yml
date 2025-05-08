@@ -50,6 +50,7 @@ jobs:
           FROM openjdk:17-jdk-slim
           COPY app.jar app.jar
           ENTRYPOINT ["java", "-jar", "/app.jar"]
+          DOCKER
           docker build -t myapp:latest .
           docker run -d -p 8080:8080 --name myapp myapp:latest
         EOF
