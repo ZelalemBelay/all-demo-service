@@ -31,11 +31,11 @@ jobs:
 
     - name: Copy JAR to Remote Host
       run: |
-        scp -P 2222 -o StrictHostKeyChecking=no adey-security/target/*.jar ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }}:/home/${{ secrets.REMOTE_USER }}/app.jar
+        scp -o StrictHostKeyChecking=no adey-security/target/*.jar ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }}:/home/${{ secrets.REMOTE_USER }}/app.jar
 
     - name: Deploy on Remote Host
       run: |
-        ssh -P 2222 -o StrictHostKeyChecking=no ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} << 'EOF'
+        ssh -o StrictHostKeyChecking=no ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} << 'EOF'
           docker stop myapp || true
           docker rm myapp || true
           docker rmi myapp:latest || true
