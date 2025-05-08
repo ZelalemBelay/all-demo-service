@@ -17,40 +17,38 @@ jobs:
       uses: actions/setup-java@v3
       with:
         distribution: 'temurin'
-        java-version: '17'  # Change based on your project's Java version
+        java-version: '17'
 
     - name: Build with Maven
       run: |
-          cd adey-security
-          mvn clean package -DskipTests
+        cd adey-security
+        mvn clean package -DskipTests
 
-    # - name: Set up SSH
-    #   uses: webfactory/ssh-agent@v0.7.0
-    #   with:
-    #     ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-
-    # Deploy to GCP VM
-    - name: Deploy to GCP VM
+    - name: Set up SSH Key
       env:
-        REMOTE_USER: ${{ secrets.REMOTE_USER }}      # Update with your remote SSH user
-        REMOTE_HOST: ${{ secrets.REMOTE_HOST }}      # Update with your VM's external IP
-        SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}  # Add private key to GitHub Secrets
+        SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
       run: |
         mkdir -p ~/.ssh
         echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
         chmod 600 ~/.ssh/id_rsa
 
+    - name: Copy JAR to Remote Host
+      run: |
+        scp -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no adey-security/target/*.jar ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }}:app.jar
+
     - name: Deploy on Remote Host
       run: |
-        ssh -o StrictHostKeyChecking=no -i ~/.ssh/ssh-key ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} << 'EOF'
-          docker stop myapp || true
-          docker rm myapp || true
-          docker rmi myapp:latest || true
-          cat <<DOCKER > Dockerfile
-          FROM openjdk:17-jdk-slim
-          COPY app.jar app.jar
-          ENTRYPOINT ["java", "-jar", "/app.jar"]
-          DOCKER
-          docker build -t myapp:latest .
-          docker run -d -p 8080:8080 --name myapp myapp:latest
+        ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} << 'EOF'
+        docker stop myapp || true
+        docker rm myapp || true
+        docker rmi myapp:latest || true
+
+        cat > Dockerfile <<EOL
+        FROM openjdk:17-jdk-slim
+        COPY app.jar app.jar
+        ENTRYPOINT ["java", "-jar", "/app.jar"]
+        EOL
+
+        docker build -t myapp:latest .
+        docker run -d -p 8080:8080 --name myapp myapp:latest
         EOF
