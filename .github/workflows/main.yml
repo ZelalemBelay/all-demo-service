@@ -1,0 +1,45 @@
+name: Deploy to Remote Docker Host
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up JDK
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+
+    - name: Build the JAR
+      run: ./mvnw clean package -DskipTests
+
+    - name: Copy files to remote server
+      uses: appleboy/scp-action@v0.1.4
+      with:
+        host: ${{ secrets.REMOTE_HOST }}
+        username: ${{ secrets.REMOTE_USER }}
+        key: ${{ secrets.REMOTE_SSH_KEY }}
+        source: "target/*.jar"
+        target: "/home/${{ secrets.REMOTE_USER }}/app"
+
+    - name: Deploy via SSH
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.REMOTE_HOST }}
+        username: ${{ secrets.REMOTE_USER }}
+        key: ${{ secrets.REMOTE_SSH_KEY }}
+        script: |
+          cd /home/${{ secrets.REMOTE_USER }}/app
+          docker stop springapp || true
+          docker rm springapp || true
+          docker build -t springapp .
+          docker run -d --name springapp -p 8080:8080 springapp
