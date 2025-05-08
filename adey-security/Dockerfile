@@ -5,7 +5,7 @@ FROM openjdk:17-jdk-alpine
 WORKDIR /app
   
   # Copy the jar file into the container
-COPY target/*.jar app.jar
+COPY *.jar app.jar
   
   # Expose the port your Spring Boot app runs on (default 8080)
 EXPOSE 8080
