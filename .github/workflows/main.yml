@@ -24,18 +24,24 @@ jobs:
           cd adey-security
           mvn clean package -DskipTests
 
-    - name: Set up SSH
-      uses: webfactory/ssh-agent@v0.7.0
-      with:
-        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+    # - name: Set up SSH
+    #   uses: webfactory/ssh-agent@v0.7.0
+    #   with:
+    #     ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-    - name: Copy JAR to Remote Host
+    # Deploy to GCP VM
+    - name: Deploy to GCP VM
+      env:
+        REMOTE_USER: ${{ secrets.REMOTE_USER }}      # Update with your remote SSH user
+        REMOTE_HOST: ${{ secrets.REMOTE_HOST }}      # Update with your VM's external IP
+        SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}  # Add private key to GitHub Secrets
       run: |
-        scp -o StrictHostKeyChecking=no adey-security/target/*.jar ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }}:/home/${{ secrets.REMOTE_USER }}/app.jar
+        echo ${{ secrets.REMOTE_HOST }} ${{ secrets.REMOTE_USER }} 
+        mkdir -p ~/.ssh
+        echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
 
-    - name: Deploy on Remote Host
-      run: |
-        ssh -o StrictHostKeyChecking=no ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} << 'EOF'
+        ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa $REMOTE_USER@$REMOTE_HOST << 'EOF'
           docker stop myapp || true
           docker rm myapp || true
           docker rmi myapp:latest || true
