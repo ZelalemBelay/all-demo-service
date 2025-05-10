@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: adey-security-service
+spec:
+  replicas: 1  # Number of app instances to run
+  selector:
+    matchLabels:
+      app: adey-security-service
+  template:
+    metadata:
+      labels:
+        app: adey-security-service
+    spec:
+      containers:
+        - name: adey-security-app
+          image: gcr.io/your-project-id/adey-security-service:latest  # Replace with your Docker image
+          ports:
+            - containerPort: 8080  # Spring Boot default port
