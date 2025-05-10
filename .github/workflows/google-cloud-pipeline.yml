@@ -57,3 +57,8 @@ jobs:
         run: |
           kubectl apply -f adey-security/k8s/deployment.yaml
           kubectl apply -f adey-security/k8s/service.yaml
+
+      - name: Display Service info
+        run: |
+          echo "🔍 Getting service info..."
+          kubectl get service -o wide
