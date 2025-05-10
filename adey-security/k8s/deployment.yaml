@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: adey-security-app
-          image: gcr.io/marine-defender-459202-r5/adey-security-service:latest  # Replace with your Docker image
+          image: us-docker.pkg.dev/marine-defender-459202-r5/adey-security-service/adey-security-service:latest  # Replace with your Docker image
           ports:
             - containerPort: 8080  # Spring Boot default port
           resources:
