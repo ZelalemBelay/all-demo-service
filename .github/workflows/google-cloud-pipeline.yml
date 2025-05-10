@@ -49,6 +49,9 @@ jobs:
          gcloud container clusters get-credentials ${{ secrets.GKE_CLUSTER }} \
           --region ${{ secrets.GKE_REGION }} \
           --project ${{ secrets.GCP_PROJECT }}
+      - name: Install GKE gcloud auth plugin
+        run: |
+          gcloud components install gke-gcloud-auth-plugin --quiet
 
       - name: Deploy to GKE
         run: |
