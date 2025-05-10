@@ -26,11 +26,11 @@ jobs:
 
       - name: Build and Push Docker image
         run: |
-          docker build -t gcr.io/${{ secrets.GCP_PROJECT }}/adey-security-service:latest .
+          docker build -t gcr.io/${{ secrets.GCP_PROJECT }}/adey-security-service:latest ./adey-security
           gcloud auth configure-docker
           docker push gcr.io/${{ secrets.GCP_PROJECT }}/adey-security-service:latest
 
       - name: Deploy to GKE
         run: |
-          kubectl apply -f deployment.yaml
-          kubectl apply -f service.yaml
+          kubectl apply -f k8s/deployment.yaml
+          kubectl apply -f k8s/service.yaml
