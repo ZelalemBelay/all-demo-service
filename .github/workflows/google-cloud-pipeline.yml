@@ -41,7 +41,7 @@ jobs:
 
       - name: Build and Push Docker image
         run: |
-          docker build -t us-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/adey-security-service/adey-security-service:latest .
+          docker build -t us-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/adey-security-service/adey-security-service:latest ./adey-security
           docker push us-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/adey-security-service/adey-security-service:latest
 
       - name: Deploy to GKE
