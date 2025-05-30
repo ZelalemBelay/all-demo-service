@@ -19,14 +19,9 @@ public class MyController {
 
     @PostMapping("/saveWorkerData")
     public Employee saveWorkerData(@RequestBody Employee model) {
-
-        System.out.println("Before: " + model);
-        model.setIsProcessComplete(!model.isProcessComplete);
-        System.out.println("After :" + model);
-
         employeeService.updateEmployee(model);
 
-        return model;
+        return employeeService.getEmployeeById(model.getId());
     }
 
     @PostMapping("/insertWorkerData")

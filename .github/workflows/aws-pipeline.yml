@@ -1,0 +1,65 @@
+name: Build and Deploy Spring Boot App to Remote EC2 Docker Host
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - '.github/workflows/main.yml'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Build with Maven
+        run: |
+          cd adey-security
+          mvn clean package -DskipTests
+
+      - name: 🔐 Set up SSH Key
+        env:
+         SSH_PRIVATE_KEY: ${{ secrets.AWS_SSH_PRIVATE_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.AWS_REMOTE_HOST }} >> ~/.ssh/known_hosts
+
+      - name: 📦 Copy JAR to AWS Linux EC2
+        run: |
+          scp -i ~/.ssh/id_rsa adey-security/target/*.jar ${{ secrets.AWS_REMOTE_USER }}@${{ secrets.AWS_REMOTE_HOST }}:/home/${{ secrets.AWS_REMOTE_USER }}/app.jar
+
+      - name: 🚀 Deploy JAR in Docker on EC2
+        run: |
+          ssh -i ~/.ssh/id_rsa ${{ secrets.AWS_REMOTE_USER }}@${{ secrets.AWS_REMOTE_HOST }} << 'EOF'
+          set -e
+          cd /home/${USER}
+                
+          echo "🛑 Stopping existing container..."
+          docker stop myapp || true
+          docker rm myapp || true
+          docker rmi myapp:latest || true
+                
+          echo "📄 Creating Dockerfile..."
+          cat > Dockerfile <<EOL
+          FROM openjdk:17-jdk-slim
+          COPY app.jar /app.jar
+          ENTRYPOINT ["java", "-jar", "/app.jar"]
+          EOL
+                
+          echo "🐳 Building Docker image..."
+          docker build -t myapp:latest .
+                
+          echo "🚀 Running Docker container..."
+          docker run -d --name myapp -p 8080:8080 myapp:latest
+          EOF

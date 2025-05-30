@@ -13,6 +13,9 @@ public class EmployeeService {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
+    @Autowired
+    private EmployeeRepository employeeRepository;
+
     private RowMapper<Employee> rowMapper = (rs, rowNum) -> new Employee(
             rs.getString("id"),
             rs.getString("firstName"),
@@ -23,24 +26,19 @@ public class EmployeeService {
     );
 
     public List<Employee> findAll() {
-        return jdbcTemplate.query("SELECT * FROM employee", rowMapper);
+        return employeeRepository.findAll();
     }
 
     public Employee getEmployeeById(String id) {
-        return jdbcTemplate.query(
-                "SELECT * FROM employee WHERE id >= ?",
-                rowMapper,
-                id
-        ).stream().findAny().get();
+        return employeeRepository.findById(id).get();
     }
 
     public void updateEmployee(Employee model){
-        this.jdbcTemplate.update("UPDATE employee SET completeIndicator=? where id=?", model.getIsProcessComplete(), model.getId());
+        this.jdbcTemplate.update("UPDATE employee SET is_process_complete=? where id=?", model.getIsProcessComplete(), model.getId());
     }
 
     public void saveEmployee(Employee model){
-        this.jdbcTemplate.update("INSERT INTO employee (id, firstName,lastName, age, department, completeIndicator) values(?, ?, ?, ?, ?, ?)",
-                model.getId(), model.getFirstName(), model.getLastName(), model.getAge(), model.getDepartment(), model.getIsProcessComplete().toString());
+        this.employeeRepository.save(model);
     }
 
     public List<Employee> getAllData(){
