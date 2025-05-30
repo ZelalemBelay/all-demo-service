@@ -1,4 +1,4 @@
-name: Build and Deploy Spring Boot App to Remote EC2 Docker Host
+name: Build and Deploy Spring Boot App to Remote AWS EC2 Docker Host
 
 on:
   workflow_dispatch:
